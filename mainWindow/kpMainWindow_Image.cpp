@@ -97,7 +97,7 @@ void kpMainWindow::setupImageMenuActions()
     ac->setDefaultShortcut(d->actionResizeScale, Qt::CTRL | Qt::Key_E);
 
     d->actionCrop = ac->addAction(QStringLiteral("image_crop"));
-    d->actionCrop->setText(i18n("Se&t as Image (Crop)"));
+    d->actionCrop->setText(i18n("Crop Canvas to &Selection"));
     connect(d->actionCrop, &QAction::triggered, this, &kpMainWindow::slotCrop);
     ac->setDefaultShortcut(d->actionCrop, Qt::CTRL | Qt::Key_T);
 

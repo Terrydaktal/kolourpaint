@@ -64,7 +64,7 @@ Features
   - Hue, Saturation, Value
   - Invert (with choice of channels)
   - Reduce Colors, Reduce to Grayscale, Resize, Rotate
-  - Scale, Set as Image (Crop), Skew, Smooth Scale, Soften & Sharpen
+  - Scale, Crop Canvas to Selection, Skew, Smooth Scale, Soften & Sharpen
 
 * Close-up Editing
   - Zoom (from 0.01x to 16x)

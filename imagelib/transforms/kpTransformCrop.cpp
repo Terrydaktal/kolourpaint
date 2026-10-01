@@ -40,9 +40,9 @@ void kpTransformCrop(kpMainWindow *mainWindow)
     Q_ASSERT(!!textSel != !!imageSel);
 
     if (textSel) {
-        ::kpTransformCrop_TextSelection(mainWindow, i18n("Set as Image"), resizeDocCommand);
+        ::kpTransformCrop_TextSelection(mainWindow, i18n("Crop Canvas to Selection"), resizeDocCommand);
     } else if (imageSel) {
-        ::kpTransformCrop_ImageSelection(mainWindow, i18n("Set as Image"), resizeDocCommand);
+        ::kpTransformCrop_ImageSelection(mainWindow, i18n("Crop Canvas to Selection"), resizeDocCommand);
     } else {
         Q_ASSERT(!"unreachable");
     }

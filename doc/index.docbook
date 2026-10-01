@@ -1092,7 +1092,7 @@ Otherwise, the thumbnail displays as much of the image as possible, starting fro
 <para><link linkend="image-mirror">Mirror (horizontally)</link></para>
 <para><link linkend="image-resize-scale">Resize / Scale</link></para>
 <para><link linkend="image-rotate">Rotate</link></para>
-<para><link linkend="image-set-as-image">Set as Image (Crop)</link></para>
+<para><link linkend="image-set-as-image">Crop Canvas to Selection</link></para>
 <para><link linkend="image-skew">Skew</link></para>
 <para><link linkend="image-soften-sharpen">Soften &amp; Sharpen</link></para>
 <para><link linkend="image-more-effects">More Effects</link></para>
@@ -1352,7 +1352,7 @@ applying this effect to a selection.
 </sect1>
 
 <sect1 id="image-set-as-image">
-<title>Set as Image (Crop)</title>
+<title>Crop Canvas to Selection</title>
 
 <para>This will set the selection as the image.</para>
 
