@@ -20,17 +20,19 @@
 #include "kpLogCategories.h"
 
 #include <QFont>
+#include <QFontMetricsF>
 #include <QList>
 #include <QPainter>
 #include <QTextCharFormat>
 
 //---------------------------------------------------------------------
 
-void kpTextSelection::drawPreeditString(QPainter &painter, int &x, int y, const kpPreeditText &preeditText) const
+void kpTextSelection::drawPreeditString(QPainter &painter, qreal &x, qreal y, const kpPreeditText &preeditText) const
 {
     int i = 0;
     const QString &preeditString = preeditText.preeditString();
     QString str;
+    const QFontMetricsF metrics(painter.font());
     for (const auto &attr : preeditText.textFormatList()) {
         int start = attr.start;
         int length = attr.length;
@@ -46,18 +48,18 @@ void kpTextSelection::drawPreeditString(QPainter &painter, int &x, int y, const 
 
         if (i < start) {
             str = preeditString.mid(i, start - i);
-            painter.drawText(x, y, str);
-            x += painter.fontMetrics().horizontalAdvance(str);
+            painter.drawText(QPointF(x, y), str);
+            x += metrics.horizontalAdvance(str);
         }
 
         painter.save();
         str = preeditString.mid(start, length);
-        int width = painter.fontMetrics().horizontalAdvance(str);
+        const qreal width = metrics.horizontalAdvance(str);
         if (format.background().color() != Qt::black) {
             painter.save();
             painter.setPen(format.background().color());
             painter.setBrush(format.background());
-            painter.drawRect(x, y - painter.fontMetrics().ascent(), width, painter.fontMetrics().height());
+            painter.drawRect(QRectF(x, y - metrics.ascent(), width, metrics.height()));
             painter.restore();
         }
         if (format.foreground().color() != Qt::black) {
@@ -65,9 +67,9 @@ void kpTextSelection::drawPreeditString(QPainter &painter, int &x, int y, const 
             painter.setPen(format.foreground().color());
         }
         if (format.underlineStyle()) {
-            painter.drawLine(x, y + painter.fontMetrics().descent(), x + width, y + painter.fontMetrics().descent());
+            painter.drawLine(QLineF(x, y + metrics.descent(), x + width, y + metrics.descent()));
         }
-        painter.drawText(x, y, str);
+        painter.drawText(QPointF(x, y), str);
 
         x += width;
         painter.restore();
@@ -76,8 +78,8 @@ void kpTextSelection::drawPreeditString(QPainter &painter, int &x, int y, const 
     }
     if (i < preeditString.length()) {
         str = preeditString.mid(i);
-        painter.drawText(x, y, str);
-        x += painter.fontMetrics().horizontalAdvance(str);
+        painter.drawText(QPointF(x, y), str);
+        x += metrics.horizontalAdvance(str);
     }
 }
 
@@ -113,7 +115,10 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
     QList<QString> theTextLines = textLines();
     kpTextStyle theTextStyle = textStyle();
 
-    const QFontMetrics fontMetrics(theTextStyle.font());
+    QFont renderFont = theTextStyle.font();
+    renderFont.setStyleStrategy(QFont::StyleStrategy(renderFont.styleStrategy() | QFont::PreferAntialias));
+
+    const QFontMetricsF fontMetrics(renderFont);
 
 #if DEBUG_KP_SELECTION
     qCDebug(kpLogLayers) << "kpTextSelection_Paint.cpp:DrawTextHelper";
@@ -122,6 +127,9 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
 #endif
 
     QPainter painter(&floatImage);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::TextAntialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
     // Fill in the background using the transparent/opaque tool setting
     if (theTextStyle.isBackgroundTransparent()) {
@@ -132,7 +140,7 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
 
     painter.setClipRect(theWholeAreaRect);
     painter.setPen(theTextStyle.foregroundColor().toQColor());
-    painter.setFont(theTextStyle.font());
+    painter.setFont(renderFont);
 
     if (theTextStyle.foregroundColor().toQColor().alpha() < 255) {
         // if the foreground color has an alpha channel, we want to
@@ -140,9 +148,9 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
         // into the background where the text is
         painter.setCompositionMode(QPainter::CompositionMode_Clear);
 
-        int baseLine = theTextAreaRect.y() + fontMetrics.ascent();
+        qreal baseLine = theTextAreaRect.y() + fontMetrics.ascent();
         for (const auto &str : theTextLines) {
-            painter.drawText(theTextAreaRect.x(), baseLine, str);
+            painter.drawText(QPointF(theTextAreaRect.x(), baseLine), str);
             baseLine += fontMetrics.lineSpacing();
 
             // if the next textline would already be below the visible text area, stop drawing
@@ -158,13 +166,13 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
     // Draw a line at a time instead of using QPainter::drawText(QRect,...).
     // Else, the line heights become >QFontMetrics::height() if you type Chinese
     // characters (!) and then the cursor gets out of sync.
-    int baseLine = theTextAreaRect.y() + fontMetrics.ascent();
+    qreal baseLine = theTextAreaRect.y() + fontMetrics.ascent();
 
     kpPreeditText thePreeditText = preeditText();
 
     if (theTextLines.isEmpty()) {
         if (!thePreeditText.isEmpty()) {
-            int x = theTextAreaRect.x();
+            qreal x = theTextAreaRect.x();
             drawPreeditString(painter, x, baseLine, thePreeditText);
         }
     } else {
@@ -175,14 +183,14 @@ void kpTextSelection::paint(QImage *destPixmap, const QRect &docRect) const
             if (row == i && !thePreeditText.isEmpty()) {
                 QString left = str.left(col);
                 QString right = str.mid(col);
-                int x = theTextAreaRect.x();
-                painter.drawText(x, baseLine, left);
+                qreal x = theTextAreaRect.x();
+                painter.drawText(QPointF(x, baseLine), left);
                 x += fontMetrics.horizontalAdvance(left);
                 drawPreeditString(painter, x, baseLine, thePreeditText);
 
-                painter.drawText(x, baseLine, right);
+                painter.drawText(QPointF(x, baseLine), right);
             } else {
-                painter.drawText(theTextAreaRect.x(), baseLine, str);
+                painter.drawText(QPointF(theTextAreaRect.x(), baseLine), str);
             }
             baseLine += fontMetrics.lineSpacing();
             i++;

@@ -231,7 +231,7 @@ public:
     //
 
 private:
-    void drawPreeditString(QPainter &painter, int &x, int y, const kpPreeditText &preeditText) const;
+    void drawPreeditString(QPainter &painter, qreal &x, qreal y, const kpPreeditText &preeditText) const;
 
 public:
     void paint(QImage *destPixmap, const QRect &docRect) const override;
