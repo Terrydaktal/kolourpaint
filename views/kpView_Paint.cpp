@@ -21,6 +21,7 @@
 #include "document/kpDocument.h"
 #include "imagelib/kpColor.h"
 #include "kpViewScrollableContainer.h"
+#include "layers/selections/image/kpFreeFormImageSelection.h"
 #include "layers/selections/kpAbstractSelection.h"
 #include "layers/selections/text/kpTextSelection.h"
 #include "layers/tempImage/kpTempImage.h"
@@ -202,7 +203,7 @@ void kpView::paintEventDrawSelection(QImage *destPixmap, const QRect &docRect)
 #if DEBUG_KP_VIEW_RENDERER && 1 || 0
     qCDebug(kpLogViews) << "\tsel border visible=" << vm->selectionBorderVisible();
 #endif
-    if (vm->selectionBorderVisible()) {
+    if (vm->selectionBorderVisible() && zoomLevelX() >= 100 && zoomLevelY() >= 100) {
         sel->paintBorder(destPixmap, docRect, vm->selectionBorderFinished());
     }
 
@@ -235,6 +236,72 @@ void kpView::paintEventDrawSelection(QImage *destPixmap, const QRect &docRect)
                                  kpColor::LightGray,
                                  kpColor::DarkGray);
         }
+    }
+}
+
+//---------------------------------------------------------------------
+
+// protected
+void kpView::paintEventDrawSelectionBorder(const QRegion &clipRegion)
+{
+    kpViewManager *vm = viewManager();
+    const kpAbstractSelection *sel = document() ? document()->selection() : nullptr;
+    if (!sel || !vm || !vm->selectionBorderVisible() || (zoomLevelX() >= 100 && zoomLevelY() >= 100)) {
+        return;
+    }
+
+    const QRect selViewRect = selectionViewRect();
+    if (!selViewRect.isValid() || !clipRegion.intersects(selViewRect.adjusted(-1, -1, 1, 1))) {
+        return;
+    }
+
+    // A document-pixel border can disappear when the image is downsampled.
+    // Paint the overlay at view resolution, after all document regions.
+    QPainter painter(this);
+    painter.setClipRegion(clipRegion);
+    painter.setPen(QPen(kpColor::Blue.toQColor(), 1, Qt::DashLine));
+    painter.setBackground(kpColor::Yellow.toQColor());
+    painter.setBackgroundMode(Qt::OpaqueMode);
+    painter.setBrush(Qt::NoBrush);
+
+    const bool selectionFinished = vm->selectionBorderFinished();
+    if (!sel->isRectangular()) {
+        const auto *freeForm = dynamic_cast<const kpFreeFormImageSelection *>(sel);
+        const QPolygon docPoints = freeForm && !selectionFinished ? freeForm->cardinallyAdjacentPoints() : sel->calculatePoints();
+        QPolygon viewPoints;
+        viewPoints.reserve(docPoints.size());
+        for (const QPoint &point : docPoints) {
+            QPoint viewPoint = transformDocToView(point);
+            // Point and rectangle scaling can round their far edges differently.
+            viewPoint.setX(qBound(selViewRect.left(), viewPoint.x(), selViewRect.right()));
+            viewPoint.setY(qBound(selViewRect.top(), viewPoint.y(), selViewRect.bottom()));
+            if (viewPoints.isEmpty() || viewPoints.last() != viewPoint) {
+                viewPoints.append(viewPoint);
+            }
+        }
+
+        painter.setPen(QPen(kpColor::Blue.toQColor(), 1, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
+        if (viewPoints.size() == 1) {
+            painter.drawPoint(viewPoints.first());
+        } else if (selectionFinished) {
+            painter.drawPolygon(viewPoints);
+        } else {
+            painter.drawPolyline(viewPoints);
+        }
+
+        if (!selectionFinished) {
+            return;
+        }
+        painter.setPen(QPen(kpColor::LightGray.toQColor(), 1, Qt::DashLine));
+        painter.setBackground(kpColor::DarkGray.toQColor());
+    }
+
+    if (selViewRect.size() == QSize(1, 1)) {
+        painter.drawPoint(selViewRect.topLeft());
+    } else if (selViewRect.width() == 1 || selViewRect.height() == 1) {
+        painter.drawLine(selViewRect.topLeft(), selViewRect.bottomRight());
+    } else {
+        painter.drawRect(selViewRect.x(), selViewRect.y(), selViewRect.width() - 1, selViewRect.height() - 1);
     }
 }
 
@@ -540,6 +607,7 @@ void kpView::paintEvent(QPaintEvent *e)
     }
 
     if (doc->selection()) {
+        paintEventDrawSelectionBorder(viewRegion);
         // Draw resize handles on top of possible grid lines
         paintEventDrawSelectionResizeHandles(e->rect());
     }

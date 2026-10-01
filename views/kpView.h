@@ -523,9 +523,12 @@ protected:
     // Draws a checkerboard that looks static even if the view is scrollable.
     void paintEventDrawCheckerBoard(QPainter *painter, const QRect &viewRect);
 
-    // Draws the selection and its border onto <destPixmap>.
+    // Draws the selection and, when not zoomed out, its border onto <destPixmap>.
     // <destPixmap> is the part of the document given by <docRect>.
     void paintEventDrawSelection(QImage *destPixmap, const QRect &docRect);
+
+    // Draws a zoomed-out selection border in view coordinates.
+    void paintEventDrawSelectionBorder(const QRegion &clipRegion);
 
     // Draws the parts of the selection's resize handles that are inside
     // <clipRect> onto the view

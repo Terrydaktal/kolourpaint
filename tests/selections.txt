@@ -10,3 +10,21 @@ etc.
 
 KolourPaint should not crash or anything like that.
 
+Selection borders when zoomed out:
+
+1. Create a canvas with a solid background and a contrasting image or text.
+2. Set zoom to 25%, 33%, 50%, 67%, then 75% in turn. At each zoom, draw a
+   rectangular selection at several slightly different starting positions.
+3. Check all four edges while drawing and after releasing the mouse. The
+   dashed outline must remain continuous; no edge should disappear when its
+   document pixels fall between the displayed pixels.
+4. Repeat with elliptical, free-form and text selections. Unfinished free-form
+   outlines must remain open. Finished curved selections must keep both their
+   shape outline and bounding rectangle, with resize handles above the border.
+5. Move and resize each selection repeatedly, and scroll it partially off the
+   viewport. Cover and uncover the window to trigger clipped repaints. Outlines
+   must match a full redraw and leave no stale pixels at previous positions.
+6. Deselect, then check that no outline or handles remain. Save or copy the
+   image and check that selection decorations are not part of its pixels.
+7. Repeat at normal and HiDPI display scales, on light and dark canvases. At
+   100% and higher zoom, the existing document-pixel border style is unchanged.
