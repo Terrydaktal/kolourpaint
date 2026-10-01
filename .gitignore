@@ -28,3 +28,8 @@ CMakeLists.txt.user*
 .cache
 .idea
 /cmake-build*
+
+# Local dependency downloads and development artifacts
+/6.6.3/
+/aqtinstall.log
+/Screenshot.png
