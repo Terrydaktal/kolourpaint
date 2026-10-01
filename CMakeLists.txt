@@ -184,6 +184,7 @@ set(kolourpaint_lib2_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/kolourpaint.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kpThumbnail.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kpViewScrollableContainer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/generic/kpImageFileDrag.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/layers/selections/image/kpAbstractImageSelection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/layers/selections/image/kpEllipticalImageSelection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/layers/selections/image/kpFreeFormImageSelection.cpp

@@ -10,11 +10,18 @@
 #include "kpMainWindowPrivate.h"
 #include "mainWindow/kpMainWindow.h"
 
+#include <QApplication>
+#include <QFileInfo>
+#include <QIcon>
+#include <QImage>
 #include <QLabel>
+#include <QMouseEvent>
+#include <QPixmap>
 #include <QStatusBar>
 #include <QString>
 
 #include "document/kpDocument.h"
+#include "generic/kpImageFileDrag.h"
 #include "kpDefs.h"
 #include "kpLogCategories.h"
 #include "kpViewScrollableContainer.h"
@@ -24,6 +31,97 @@
 
 #include <KLocalizedString>
 #include <KSqueezedTextLabel>
+
+//---------------------------------------------------------------------
+
+namespace {
+
+QString ExistingDocumentFilePath(const kpDocument *document)
+{
+    if (document->isModified() || !document->isFromExistingURL() || !document->url().isLocalFile()) {
+        return {};
+    }
+
+    const QFileInfo file(document->url().toLocalFile());
+    return file.isFile() ? file.absoluteFilePath() : QString();
+}
+
+class kpImageDragLabel : public QLabel
+{
+public:
+    kpImageDragLabel(kpMainWindow *mainWindow, QWidget *parent)
+        : QLabel(parent)
+        , m_mainWindow(mainWindow)
+    {
+        const int iconExtent = fontMetrics().height();
+        setPixmap(QIcon::fromTheme(QStringLiteral("document-export")).pixmap(iconExtent, iconExtent));
+        setAlignment(Qt::AlignCenter);
+        setFixedSize(iconExtent + 8, iconExtent + 2);
+        setCursor(Qt::OpenHandCursor);
+        setToolTip(i18n("Drag the image to another application or terminal."));
+        setAccessibleName(i18n("Drag Image as File"));
+        setEnabled(false);
+
+        kpImageFileDrag::cleanupTemporaryFiles();
+    }
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override
+    {
+        if (isEnabled() && event->button() == Qt::LeftButton) {
+            m_dragStartPoint = event->position().toPoint();
+            setCursor(Qt::ClosedHandCursor);
+            event->accept();
+            return;
+        }
+
+        QLabel::mousePressEvent(event);
+    }
+
+    void mouseMoveEvent(QMouseEvent *event) override
+    {
+        if (m_dragStartPoint == KP_INVALID_POINT || !(event->buttons() & Qt::LeftButton)) {
+            QLabel::mouseMoveEvent(event);
+            return;
+        }
+
+        if ((event->position().toPoint() - m_dragStartPoint).manhattanLength() < QApplication::startDragDistance()) {
+            return;
+        }
+
+        m_dragStartPoint = KP_INVALID_POINT;
+        startImageDrag();
+        setCursor(Qt::OpenHandCursor);
+    }
+
+    void mouseReleaseEvent(QMouseEvent *event) override
+    {
+        m_dragStartPoint = KP_INVALID_POINT;
+        setCursor(Qt::OpenHandCursor);
+        QLabel::mouseReleaseEvent(event);
+    }
+
+private:
+    void startImageDrag()
+    {
+        kpDocument *document = m_mainWindow->document();
+        if (!document) {
+            return;
+        }
+
+        const QImage image = document->imageWithSelection();
+        if (image.isNull()) {
+            return;
+        }
+
+        kpImageFileDrag::start(this, m_mainWindow, image, nullptr, ExistingDocumentFilePath(document));
+    }
+
+    kpMainWindow *const m_mainWindow;
+    QPoint m_dragStartPoint = KP_INVALID_POINT;
+};
+
+} // namespace
 
 //---------------------------------------------------------------------
 
@@ -62,6 +160,9 @@ void kpMainWindow::createStatusBar()
     d->statusBarMessageLabel->setFixedHeight(d->statusBarMessageLabel->fontMetrics().height() + 2);
     d->statusBarMessageLabel->setTextElideMode(Qt::ElideRight); // this is the reason why we explicitly set a widget
     sb->addWidget(d->statusBarMessageLabel, 1 /*stretch*/);
+
+    d->statusBarImageDragLabel = new kpImageDragLabel(this, sb);
+    sb->addPermanentWidget(d->statusBarImageDragLabel);
 
     addPermanentStatusBarItem(StatusBarItemShapePoints, (maxDimenLength + 1 /*,*/ + maxDimenLength) * 2 + 3 /* - */);
     addPermanentStatusBarItem(StatusBarItemShapeSize, (1 /*+/-*/ + maxDimenLength) * 2 + 1 /*x*/);
@@ -324,6 +425,7 @@ void kpMainWindow::recalculateStatusBar()
 
     recalculateStatusBarMessage();
     recalculateStatusBarShape();
+    d->statusBarImageDragLabel->setEnabled(d->document);
 
     if (d->document) {
         setStatusBarDocSize(QSize(d->document->width(), d->document->height()));

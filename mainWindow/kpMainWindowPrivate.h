@@ -246,6 +246,7 @@ struct kpMainWindowPrivate {
 
         statusBarCreated(false)
         , statusBarMessageLabel(nullptr)
+        , statusBarImageDragLabel(nullptr)
         , statusBarShapeLastPointsInitialised(false)
         , statusBarShapeLastSizeInitialised(false)
         ,
@@ -407,6 +408,7 @@ struct kpMainWindowPrivate {
 
     bool statusBarCreated;
     KSqueezedTextLabel *statusBarMessageLabel;
+    QLabel *statusBarImageDragLabel;
     QList<QLabel *> statusBarLabels;
 
     bool statusBarShapeLastPointsInitialised;
