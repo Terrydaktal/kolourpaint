@@ -11,6 +11,7 @@
 #define DEBUG_KP_MAIN_WINDOW 0
 
 #include "document/kpDocumentSaveOptions.h"
+#include "imagelib/kpColor.h"
 
 #include <QList>
 #include <QRect>
@@ -257,6 +258,11 @@ struct kpMainWindowPrivate {
         , actionTextItalic(nullptr)
         , actionTextUnderline(nullptr)
         , actionTextStrikeThru(nullptr)
+        , textBackgroundColor(kpColor::Transparent)
+        , textBackgroundOpaque(false)
+        , nonTextBackgroundColor(kpColor::Invalid)
+        , nonTextBackgroundOpaque(true)
+        , haveNonTextBackgroundStyle(false)
         , settingTextStyle(0)
         , textOldFontSize(0)
     {
@@ -415,6 +421,12 @@ struct kpMainWindowPrivate {
     KFontAction *actionTextFontFamily;
     KFontSizeAction *actionTextFontSize;
     KToggleAction *actionTextBold, *actionTextItalic, *actionTextUnderline, *actionTextStrikeThru;
+
+    kpColor textBackgroundColor;
+    bool textBackgroundOpaque;
+    kpColor nonTextBackgroundColor;
+    bool nonTextBackgroundOpaque;
+    bool haveNonTextBackgroundStyle;
 
     int settingTextStyle;
     QString textOldFontFamily;

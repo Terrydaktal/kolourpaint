@@ -17,6 +17,8 @@
 #include <KToggleAction>
 #include <KToolBar>
 
+#include <QColor>
+
 #include "kpDefs.h"
 #include "layers/selections/text/kpTextStyle.h"
 #include "tools/selection/text/kpToolText.h"
@@ -67,6 +69,7 @@ void kpMainWindow::setupTextToolBarActions()
 void kpMainWindow::readAndApplyTextSettings()
 {
     KConfigGroup cfg(KSharedConfig::openConfig(), QStringLiteral(kpSettingsGroupText));
+    const QColor textBackgroundColor = cfg.readEntry(kpSettingTextBackgroundColor, QColor(Qt::transparent));
 
     const QString font(cfg.readEntry(kpSettingFontFamily, QStringLiteral("Times")));
     d->actionTextFontFamily->setFont(font);
@@ -78,6 +81,8 @@ void kpMainWindow::readAndApplyTextSettings()
     d->actionTextItalic->setChecked(cfg.readEntry(kpSettingItalic, false));
     d->actionTextUnderline->setChecked(cfg.readEntry(kpSettingUnderline, false));
     d->actionTextStrikeThru->setChecked(cfg.readEntry(kpSettingStrikeThru, false));
+    d->textBackgroundColor = textBackgroundColor.isValid() ? kpColor(textBackgroundColor.rgba()) : kpColor::Transparent;
+    d->textBackgroundOpaque = cfg.readEntry(kpSettingTextBackgroundOpaque, false);
 
     d->textOldFontFamily = d->actionTextFontFamily->font();
     d->textOldFontSize = d->actionTextFontSize->fontSize();
@@ -261,7 +266,7 @@ KToolBar *kpMainWindow::textToolBar()
 
 bool kpMainWindow::isTextStyleBackgroundOpaque() const
 {
-    if (d->toolToolBar) {
+    if (toolIsTextTool() && d->toolToolBar) {
         kpToolWidgetOpaqueOrTransparent *oot = d->toolToolBar->toolWidgetOpaqueOrTransparent();
 
         if (oot) {
@@ -269,12 +274,17 @@ bool kpMainWindow::isTextStyleBackgroundOpaque() const
         }
     }
 
-    return true;
+    return d->textBackgroundOpaque;
 }
 
 // public
 kpTextStyle kpMainWindow::textStyle() const
 {
+    kpColor backgroundColor = d->textBackgroundColor.isValid() ? d->textBackgroundColor : kpColor::Transparent;
+    if (toolIsTextTool() && d->colorToolBar) {
+        backgroundColor = d->colorToolBar->backgroundColor();
+    }
+
     return kpTextStyle(d->actionTextFontFamily->font(),
                        d->actionTextFontSize->fontSize(),
                        d->actionTextBold->isChecked(),
@@ -282,7 +292,7 @@ kpTextStyle kpMainWindow::textStyle() const
                        d->actionTextUnderline->isChecked(),
                        d->actionTextStrikeThru->isChecked(),
                        d->colorToolBar ? d->colorToolBar->foregroundColor() : kpColor::Invalid,
-                       d->colorToolBar ? d->colorToolBar->backgroundColor() : kpColor::Invalid,
+                       backgroundColor,
                        isTextStyleBackgroundOpaque());
 }
 
@@ -329,11 +339,16 @@ void kpMainWindow::setTextStyle(const kpTextStyle &textStyle_)
         d->colorToolBar->setForegroundColor(textStyle_.foregroundColor());
     }
 
-    if (textStyle_.backgroundColor() != d->colorToolBar->backgroundColor()) {
-        d->colorToolBar->setBackgroundColor(textStyle_.backgroundColor());
+    const kpColor backgroundColor = textStyle_.backgroundColor().isValid() ? textStyle_.backgroundColor() : kpColor::Transparent;
+    const bool textBackgroundStyleChanged = (backgroundColor != d->textBackgroundColor || textStyle_.isBackgroundOpaque() != d->textBackgroundOpaque);
+    d->textBackgroundColor = backgroundColor;
+    d->textBackgroundOpaque = textStyle_.isBackgroundOpaque();
+
+    if (toolIsTextTool() && backgroundColor != d->colorToolBar->backgroundColor()) {
+        d->colorToolBar->setBackgroundColor(backgroundColor);
     }
 
-    if (textStyle_.isBackgroundOpaque() != isTextStyleBackgroundOpaque()) {
+    if (toolIsTextTool() && textStyle_.isBackgroundOpaque() != isTextStyleBackgroundOpaque()) {
         if (d->toolToolBar) {
             kpToolWidgetOpaqueOrTransparent *oot = d->toolToolBar->toolWidgetOpaqueOrTransparent();
 
@@ -341,6 +356,13 @@ void kpMainWindow::setTextStyle(const kpTextStyle &textStyle_)
                 oot->setOpaque(textStyle_.isBackgroundOpaque());
             }
         }
+    }
+
+    if (textBackgroundStyleChanged) {
+        KConfigGroup cfg(KSharedConfig::openConfig(), QStringLiteral(kpSettingsGroupText));
+        cfg.writeEntry(kpSettingTextBackgroundColor, backgroundColor.toQColor());
+        cfg.writeEntry(kpSettingTextBackgroundOpaque, d->textBackgroundOpaque);
+        cfg.sync();
     }
 
     d->settingTextStyle--;

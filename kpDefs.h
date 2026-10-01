@@ -80,6 +80,8 @@
 #define kpSettingItalic "Italic"
 #define kpSettingUnderline "Underline"
 #define kpSettingStrikeThru "Strike Thru"
+#define kpSettingTextBackgroundColor "Background Color"
+#define kpSettingTextBackgroundOpaque "Background Opaque"
 
 #define kpSettingsGroupFlattenEffect "Flatten Effect Settings"
 #define kpSettingFlattenEffectColor1 "Color1"

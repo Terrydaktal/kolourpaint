@@ -92,6 +92,8 @@ void kpToolText::slotColorsSwapped(const kpColor &newForegroundColor, const kpCo
     }
 
     kpTextStyle newTextStyle = environ()->textStyle();
+    newTextStyle.setForegroundColor(newForegroundColor);
+    newTextStyle.setBackgroundColor(newBackgroundColor);
 
     kpTextStyle oldTextStyle = newTextStyle;
     oldTextStyle.setForegroundColor(newBackgroundColor);
@@ -101,7 +103,7 @@ void kpToolText::slotColorsSwapped(const kpColor &newForegroundColor, const kpCo
 }
 
 // protected slot virtual [base kpTool]
-void kpToolText::slotForegroundColorChanged(const kpColor & /*color*/)
+void kpToolText::slotForegroundColorChanged(const kpColor &color)
 {
 #if DEBUG_KP_TOOL_TEXT
     qCDebug(kpLogTools) << "kpToolText::slotForegroundColorChanged()";
@@ -112,6 +114,7 @@ void kpToolText::slotForegroundColorChanged(const kpColor & /*color*/)
     }
 
     kpTextStyle newTextStyle = environ()->textStyle();
+    newTextStyle.setForegroundColor(color);
 
     kpTextStyle oldTextStyle = newTextStyle;
     oldTextStyle.setForegroundColor(oldForegroundColor());
@@ -120,7 +123,7 @@ void kpToolText::slotForegroundColorChanged(const kpColor & /*color*/)
 }
 
 // protected slot virtual [base kpAbstractSelectionTool]
-void kpToolText::slotBackgroundColorChanged(const kpColor & /*color*/)
+void kpToolText::slotBackgroundColorChanged(const kpColor &color)
 {
 #if DEBUG_KP_TOOL_TEXT
     qCDebug(kpLogTools) << "kpToolText::slotBackgroundColorChanged()";
@@ -131,6 +134,7 @@ void kpToolText::slotBackgroundColorChanged(const kpColor & /*color*/)
     }
 
     kpTextStyle newTextStyle = environ()->textStyle();
+    newTextStyle.setBackgroundColor(color);
 
     kpTextStyle oldTextStyle = newTextStyle;
     oldTextStyle.setBackgroundColor(oldBackgroundColor());

@@ -398,6 +398,44 @@ void kpMainWindow::slotToolSelected(kpTool *tool)
         disconnect(d->colorToolBar, &kpColorToolBar::colorSimilarityChanged, previousTool, &kpTool::slotColorSimilarityChangedInternal);
     }
 
+    kpToolWidgetOpaqueOrTransparent *oot = d->toolToolBar ? d->toolToolBar->toolWidgetOpaqueOrTransparent() : nullptr;
+    if (previousTool == d->toolText && d->colorToolBar && oot) {
+        // Persist text-specific background style and then restore the non-text style.
+        d->textBackgroundColor = d->colorToolBar->backgroundColor();
+        d->textBackgroundOpaque = oot->isOpaque();
+
+        KConfigGroup textCfg(KSharedConfig::openConfig(), QStringLiteral(kpSettingsGroupText));
+        textCfg.writeEntry(kpSettingTextBackgroundColor, d->textBackgroundColor.toQColor());
+        textCfg.writeEntry(kpSettingTextBackgroundOpaque, d->textBackgroundOpaque);
+        textCfg.sync();
+
+        if (d->haveNonTextBackgroundStyle) {
+            if (d->colorToolBar->backgroundColor() != d->nonTextBackgroundColor) {
+                d->colorToolBar->setBackgroundColor(d->nonTextBackgroundColor);
+            }
+
+            if (oot->isOpaque() != d->nonTextBackgroundOpaque) {
+                oot->setOpaque(d->nonTextBackgroundOpaque);
+            }
+        }
+    }
+
+    if (tool == d->toolText && d->colorToolBar && oot) {
+        // Keep the regular drawing background independent from the text background.
+        d->nonTextBackgroundColor = d->colorToolBar->backgroundColor();
+        d->nonTextBackgroundOpaque = oot->isOpaque();
+        d->haveNonTextBackgroundStyle = true;
+
+        const kpColor textBackgroundColor = d->textBackgroundColor.isValid() ? d->textBackgroundColor : kpColor::Transparent;
+        if (d->colorToolBar->backgroundColor() != textBackgroundColor) {
+            d->colorToolBar->setBackgroundColor(textBackgroundColor);
+        }
+
+        if (oot->isOpaque() != d->textBackgroundOpaque) {
+            oot->setOpaque(d->textBackgroundOpaque);
+        }
+    }
+
     if (tool) {
         connect(tool, &kpTool::movedAndAboutToDraw, this, &kpMainWindow::slotDragScroll);
 
