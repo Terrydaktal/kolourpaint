@@ -40,6 +40,9 @@ public:
 protected:
     kpAbstractSelectionContentCommand *newGiveContentCommand() const override;
 
+    bool shouldStartExternalDrag(const QPoint &globalPoint) const override;
+    void startExternalDrag() override;
+
     QString nameOfCreateCommand() const override;
 
     //

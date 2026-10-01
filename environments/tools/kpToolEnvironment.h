@@ -125,6 +125,8 @@ public:
 
     void fitToPage() const;
 
+    bool mainWindowContainsGlobalPoint(const QPoint &point) const;
+
     static bool drawAntiAliased;
 
 private:

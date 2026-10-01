@@ -160,6 +160,14 @@ void kpTool::mouseMoveEvent(QMouseEvent *e)
         d->currentPoint = view->transformViewToDoc(e->pos());
         d->currentViewPoint = e->pos();
 
+        if (shouldStartExternalDrag(e->globalPosition().toPoint())) {
+            // Restore the document before QDrag enters its nested event loop.
+            cancelShapeInternal();
+            startExternalDrag();
+            releasedAllButtons();
+            return;
+        }
+
 #if DEBUG_KP_TOOL && 0
         qCDebug(kpLogTools) << "\tDraw!";
 #endif

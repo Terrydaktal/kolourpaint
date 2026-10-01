@@ -201,6 +201,11 @@ protected:
     // this is useful for "instant" tools like the Pen & Eraser
     virtual void draw(const QPoint &thisPoint, const QPoint &lastPoint, const QRect &normalizedRect);
 
+    // Allows a tool to hand an in-progress operation to Qt drag-and-drop once
+    // the pointer leaves the application window.
+    virtual bool shouldStartExternalDrag(const QPoint &globalPoint) const;
+    virtual void startExternalDrag();
+
 private:
     void drawInternal();
 

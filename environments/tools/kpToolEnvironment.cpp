@@ -177,4 +177,10 @@ void kpToolEnvironment::fitToPage() const
     mainWindow()->slotFitToPage();
 }
 
+// public
+bool kpToolEnvironment::mainWindowContainsGlobalPoint(const QPoint &point) const
+{
+    return mainWindow()->frameGeometry().contains(point);
+}
+
 #include "moc_kpToolEnvironment.cpp"

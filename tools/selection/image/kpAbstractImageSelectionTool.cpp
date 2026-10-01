@@ -7,16 +7,21 @@
 
 #include "kpAbstractImageSelectionTool.h"
 
+#include <memory>
+
 #include <QHash>
 #include <QImage>
 #include <QRegion>
+#include <QWidget>
 
 #include <KLocalizedString>
 
 #include "commands/tools/selection/kpToolSelectionPullFromDocumentCommand.h"
 #include "document/kpDocument.h"
 #include "environments/tools/selection/kpToolSelectionEnvironment.h"
+#include "generic/kpImageFileDrag.h"
 #include "layers/selections/image/kpAbstractImageSelection.h"
+#include "layers/selections/kpSelectionDrag.h"
 
 //---------------------------------------------------------------------
 
@@ -102,6 +107,39 @@ kpAbstractSelectionContentCommand *kpAbstractImageSelectionTool::newGiveContentC
 }
 
 //---------------------------------------------------------------------
+
+// protected virtual [kpTool]
+bool kpAbstractImageSelectionTool::shouldStartExternalDrag(const QPoint &globalPoint) const
+{
+    return drawType() == Move && mouseButton() == 0 && !environ()->mainWindowContainsGlobalPoint(globalPoint);
+}
+
+//---------------------------------------------------------------------
+
+// protected virtual [kpTool]
+void kpAbstractImageSelectionTool::startExternalDrag()
+{
+    const kpAbstractImageSelection *selection = document()->imageSelection();
+    if (!selection) {
+        return;
+    }
+
+    std::unique_ptr<kpAbstractImageSelection> dragSelection(selection->clone());
+    if (!dragSelection->hasContent()) {
+        dragSelection->setBaseImage(document()->getSelectedBaseImage());
+    }
+
+    const QImage image = dragSelection->transparentImage();
+    const QPoint hotSpot = startPoint() - selection->topLeft();
+    kpImageFileDrag::start(this,
+                           qobject_cast<QWidget *>(parent()),
+                           image,
+                           new kpSelectionDrag(*dragSelection),
+                           QString(),
+                           hotSpot);
+}
+
+//---------------------------------------------------------------------
 // protected virtual [kpAbstractSelectionTool]
 
 QString kpAbstractImageSelectionTool::nameOfCreateCommand() const
@@ -123,7 +161,7 @@ QString kpAbstractImageSelectionTool::haventBegunDrawUserMessageCreate() const
 
 QString kpAbstractImageSelectionTool::haventBegunDrawUserMessageMove() const
 {
-    return i18n("Left drag to move selection.");
+    return i18n("Left drag to move selection; drag it outside the window to export it.");
 }
 
 //---------------------------------------------------------------------

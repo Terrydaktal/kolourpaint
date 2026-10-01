@@ -280,6 +280,21 @@ void kpTool::draw(const QPoint &, const QPoint &, const QRect &)
 
 //---------------------------------------------------------------------
 
+// virtual
+bool kpTool::shouldStartExternalDrag(const QPoint &) const
+{
+    return false;
+}
+
+//---------------------------------------------------------------------
+
+// virtual
+void kpTool::startExternalDrag()
+{
+}
+
+//---------------------------------------------------------------------
+
 // private
 void kpTool::drawInternal()
 {
