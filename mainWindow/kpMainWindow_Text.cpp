@@ -17,6 +17,7 @@
 #include <KToggleAction>
 #include <KToolBar>
 
+#include <QApplication>
 #include <QColor>
 
 #include "kpDefs.h"
@@ -69,7 +70,9 @@ void kpMainWindow::setupTextToolBarActions()
 void kpMainWindow::readAndApplyTextSettings()
 {
     KConfigGroup cfg(KSharedConfig::openConfig(), QStringLiteral(kpSettingsGroupText));
-    const QColor textBackgroundColor = cfg.readEntry(kpSettingTextBackgroundColor, QColor(Qt::transparent));
+    const bool darkPalette = QApplication::palette().color(QPalette::Window).lightnessF() < 0.5;
+    const QColor defaultTextBackgroundColor = darkPalette ? QColor(Qt::black) : QColor(Qt::white);
+    const QColor textBackgroundColor = cfg.readEntry(kpSettingTextBackgroundColor, defaultTextBackgroundColor);
 
     const QString font(cfg.readEntry(kpSettingFontFamily, QStringLiteral("Times")));
     d->actionTextFontFamily->setFont(font);

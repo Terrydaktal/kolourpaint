@@ -297,6 +297,8 @@ Q_SIGNALS:
     void selectionIsTextChanged(bool isText);
 
 private:
+    static QRgb defaultCanvasColor();
+
     int m_constructorWidth, m_constructorHeight;
     kpImage *m_image;
 

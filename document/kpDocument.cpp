@@ -29,10 +29,20 @@
 #include <KJobWidgets>
 #include <KLocalizedString>
 
+#include <QApplication>
 #include <QColor>
 #include <QImage>
 #include <QRect>
 #include <QSize>
+
+//---------------------------------------------------------------------
+
+QRgb kpDocument::defaultCanvasColor()
+{
+    const bool darkPalette = QApplication::palette().color(QPalette::Window).lightnessF() < 0.5;
+    const QColor canvasColor = darkPalette ? QColor(Qt::black) : QColor(Qt::white);
+    return canvasColor.rgb();
+}
 
 //---------------------------------------------------------------------
 
@@ -55,7 +65,7 @@ kpDocument::kpDocument(int w, int h, kpDocumentEnvironment *environ)
 #endif
 
     m_image = new kpImage(w, h, QImage::Format_ARGB32_Premultiplied);
-    m_image->fill(QColor(Qt::white).rgb());
+    m_image->fill(defaultCanvasColor());
 
     d->environ = environ;
 }

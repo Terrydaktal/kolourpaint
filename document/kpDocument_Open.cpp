@@ -149,7 +149,7 @@ void kpDocument::openNew(const QUrl &url)
     qCDebug(kpLogDocument) << "kpDocument::openNew (" << url << ")";
 #endif
 
-    m_image->fill(QColor(Qt::white).rgb());
+    m_image->fill(defaultCanvasColor());
 
     setURL(url, false /*not from url*/);
 

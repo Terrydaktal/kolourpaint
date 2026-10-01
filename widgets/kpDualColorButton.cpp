@@ -31,8 +31,9 @@ kpDualColorButton::kpDualColorButton(QWidget *parent)
     setSizePolicy(QSizePolicy::Fixed /*horizontal*/, QSizePolicy::Fixed /*vertical*/);
     setFrameStyle(QFrame::Panel | QFrame::Sunken);
 
-    m_color[0] = kpColor(0, 0, 0); // black
-    m_color[1] = kpColor(255, 255, 255); // white
+    const bool darkPalette = QApplication::palette().color(QPalette::Window).lightnessF() < 0.5;
+    m_color[0] = darkPalette ? kpColor(255, 255, 255) : kpColor(0, 0, 0);
+    m_color[1] = darkPalette ? kpColor(0, 0, 0) : kpColor(255, 255, 255);
 
     setAcceptDrops(true);
 }
